@@ -2,7 +2,6 @@
 
 import Image from "next/image"
 import { useState, useRef, useEffect } from "react"
-import { ImagePreloader } from "./image-preloader"
 import { PRELOAD_CONFIG } from "@/lib/preload-config"
 
 // Utilise directement la configuration centralisée pour éviter la duplication
@@ -83,10 +82,6 @@ export function InfiniteGallery() {
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-r from-rose-50 via-white to-amber-50 py-4 sm:py-6 md:py-8">
-      {/* Preloader avec priorités optimisées */}
-      <ImagePreloader images={PRELOAD_CONFIG.galleryPriority} priority={true} />
-      <ImagePreloader images={PRELOAD_CONFIG.gallerySecondary} priority={false} />
-      
       <div 
         ref={containerRef}
         className="flex space-x-4 sm:space-x-5 md:space-x-5 lg:space-x-6 w-max"
@@ -100,21 +95,32 @@ export function InfiniteGallery() {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
-        {duplicatedImages.map((image, index) => (
-          <div
-            key={index}
-            className="flex-shrink-0 group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <Image
-              src={image || "/placeholder.svg"}
-              alt={`Glow by FC Collection ${(index % galleryImages.length) + 1}`}
-              width={1170}
-              height={1500}
-              className="w-[200px] h-[280px] sm:w-[220px] sm:h-[310px] md:w-[240px] md:h-[340px] lg:w-[250px] lg:h-[350px] object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </div>
-        ))}
+        {duplicatedImages.map((image, index) => {
+          // Déterminer la priorité basée sur l'index
+          const isPriority = index < PRELOAD_CONFIG.galleryPriority.length
+          const isCritical = index < 4 // Premières images critiques
+          
+          return (
+            <div
+              key={index}
+              className="flex-shrink-0 group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <Image
+                src={image || "/placeholder.svg"}
+                alt={`Glow by FC Collection ${(index % galleryImages.length) + 1}`}
+                width={1170}
+                height={1500}
+                className="w-[200px] h-[280px] sm:w-[220px] sm:h-[310px] md:w-[240px] md:h-[340px] lg:w-[250px] lg:h-[350px] object-cover group-hover:scale-105 transition-transform duration-500"
+                priority={isCritical}
+                loading={isPriority ? "eager" : "lazy"}
+                quality={isPriority ? 85 : 75}
+                placeholder="blur"
+                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyiwwNiAAY5kT3NcOFb7Udqdt/b//Z"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </div>
+          )
+        })}
       </div>
     </div>
   )

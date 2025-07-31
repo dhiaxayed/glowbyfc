@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/contexts/theme-context"
+import { CriticalPreloader } from "@/components/critical-preloader"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -26,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={inter.className}>
+        <CriticalPreloader />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

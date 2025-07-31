@@ -26,8 +26,7 @@ import { NewsletterCTA } from "@/components/newsletter-cta"
 import { SimpleFooter } from "@/components/simple-footer"
 import { MobileMenu } from "@/components/mobile-menu"
 import { AppWrapper } from "@/components/app-wrapper"
-import { ImagePreloader } from "@/components/image-preloader"
-import { PRELOAD_CONFIG } from "@/lib/preload-config"
+import { CriticalImagePreloader } from "@/components/optimized-preloader"
 import { PerformanceOptimizer } from "@/components/performance-optimizer"
 
 export default function GlowByFCLanding() {
@@ -49,8 +48,8 @@ export default function GlowByFCLanding() {
 
   const MainContent = () => (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-amber-50 text-gray-800">
-      {/* Préchargement des images en arrière-plan */}
-      <ImagePreloader images={PRELOAD_CONFIG.gallerySecondary} priority={false} />
+      {/* Préchargement optimisé des images critiques */}
+      <CriticalImagePreloader />
       
       {/* Delivery Banner */}
       <DeliveryBanner />
@@ -68,7 +67,7 @@ export default function GlowByFCLanding() {
                   height={44}
                   className="w-full h-full object-contain rounded-full"
                   priority
-                  quality={100}
+                  quality={85}
                 />
               </div>
               <div className="flex flex-col">

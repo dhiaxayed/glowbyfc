@@ -1,24 +1,36 @@
-// Configuration des assets à précharger
-export const PRELOAD_CONFIG = {
-  // Assets critiques à charger en priorité
+// Configuration optimisée pour le préchargement d'assets
+// Basée sur les meilleures pratiques Next.js de performance
+
+interface PreloadConfig {
+  // Assets critiques (LCP - Largest Contentful Paint)
+  critical: string[]
+  
+  // Galerie prioritaire (images above-the-fold)
+  galleryPriority: string[]
+  
+  // Galerie secondaire (préchargement différé)
+  gallerySecondary: string[]
+  
+  // Vidéos (préchargement spécial)
+  videos: string[]
+}
+
+export const PRELOAD_CONFIG: PreloadConfig = {
+  // Assets ULTRA-CRITIQUES - Logo, branding et vidéo (chargement immédiat)
   critical: [
     "/assets/logo.png",
     "/assets/cptr.png",
-    "/placeholder.jpg"
+    "/assets/22.mp4", // Vidéo critique déplacée ici pour chargement immédiat
   ],
   
-  // Images de la galerie (premières pour l'affichage initial)
+  // TOUTES les images de la galerie en priorité HAUTE (chargement immédiat après les assets critiques)
   galleryPriority: [
     "/glow2/1.jpeg",
     "/glow2/2.jpeg", 
     "/glow2/3.jpeg",
     "/glow2/4.jpeg",
     "/glow2/5.jpeg",
-    "/glow2/6.png"
-  ],
-  
-  // Reste des images de la galerie
-  gallerySecondary: [
+    "/glow2/6.png",
     "/glow2/7.png",
     "/glow2/8.jpeg",
     "/glow2/9.jpeg",
@@ -51,12 +63,17 @@ export const PRELOAD_CONFIG = {
     "/glow2/36.jpeg",
     "/glow2/37.png",
     "/glow2/38.jpeg"
+  ],
+  
+  // Images secondaires (vide maintenant - toutes déplacées en priorité)
+  gallerySecondary: [
+    // Toutes les images sont maintenant en priorité haute pour chargement immédiat
+  ],
+  
+  // Vidéos avec préchargement spécialisé critique (maintenant vide car déplacé en critical)
+  videos: [
+    // Vidéo déplacée dans critical pour chargement immédiat
   ]
 }
 
-// Fonction utilitaire pour obtenir tous les assets
-export const getAllAssets = () => [
-  ...PRELOAD_CONFIG.critical,
-  ...PRELOAD_CONFIG.galleryPriority,
-  ...PRELOAD_CONFIG.gallerySecondary
-]
+
