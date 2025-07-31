@@ -2,47 +2,11 @@
 
 import Image from "next/image"
 import { useState, useRef, useEffect } from "react"
+import { ImagePreloader } from "./image-preloader"
+import { PRELOAD_CONFIG } from "@/lib/preload-config"
 
-const galleryImages = [
-  "/glow2/1.jpeg?height=1500&width=1170",
-  "/glow2/2.jpeg?height=1500&width=1170",
-  "/glow2/3.jpeg?height=1500&width=1170",
-  "/glow2/4.jpeg?height=1500&width=1170",
-  "/glow2/5.jpeg?height=1500&width=1170",
-  "/glow2/6.png?height=1500&width=1170",
-  "/glow2/7.png?height=1500&width=1170",
-  "/glow2/8.jpeg?height=1500&width=1170",
-  "/glow2/9.jpeg?height=1500&width=1170",
-  "/glow2/10.jpeg?height=1500&width=1170",
-  "/glow2/11.jpeg?height=1500&width=1170",
-  "/glow2/12.jpeg?height=1500&width=1170",
-  "/glow2/13.jpeg?height=1500&width=1170",
-  "/glow2/14.png?height=1500&width=1170",
-  "/glow2/15.png?height=1500&width=1170",
-  "/glow2/16.png?height=1500&width=1170",
-  "/glow2/17.png?height=1500&width=1170",
-  "/glow2/18.png?height=1500&width=1170",
-  "/glow2/19.png?height=1500&width=1170",
-  "/glow2/20.jpeg?height=1500&width=1170",
-  "/glow2/21.jpeg?height=1500&width=1170",
-  "/glow2/22.jpeg?height=1500&width=1170",
-  "/glow2/23.jpeg?height=1500&width=1170",
-  "/glow2/24.jpeg?height=1500&width=1170",
-  "/glow2/25.jpeg?height=1500&width=1170",
-  "/glow2/26.jpeg?height=1500&width=1170",
-  "/glow2/27.jpeg?height=1500&width=1170",
-  "/glow2/28.jpeg?height=1500&width=1170",
-  "/glow2/29.jpeg?height=1500&width=1170",
-  "/glow2/30.jpeg?height=1500&width=1170",
-  "/glow2/31.jpeg?height=1500&width=1170",
-  "/glow2/32.jpeg?height=1500&width=1170",
-  "/glow2/33.jpeg?height=1500&width=1170",
-  "/glow2/34.jpeg?height=1500&width=1170",
-  "/glow2/35.jpeg?height=1500&width=1170",
-  "/glow2/36.jpeg?height=1500&width=1170",
-  "/glow2/37.png?height=1500&width=1170",
-  "/glow2/38.jpeg?height=1500&width=1170",
-]
+// Utilise directement la configuration centralisée pour éviter la duplication
+const galleryImages = [...PRELOAD_CONFIG.galleryPriority, ...PRELOAD_CONFIG.gallerySecondary]
 
 export function InfiniteGallery() {
   // Duplicate the images array to create seamless infinite scroll
@@ -119,6 +83,10 @@ export function InfiniteGallery() {
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-r from-rose-50 via-white to-amber-50 py-4 sm:py-6 md:py-8">
+      {/* Preloader avec priorités optimisées */}
+      <ImagePreloader images={PRELOAD_CONFIG.galleryPriority} priority={true} />
+      <ImagePreloader images={PRELOAD_CONFIG.gallerySecondary} priority={false} />
+      
       <div 
         ref={containerRef}
         className="flex space-x-4 sm:space-x-5 md:space-x-5 lg:space-x-6 w-max"
