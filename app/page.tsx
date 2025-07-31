@@ -215,6 +215,10 @@ export default function GlowByFCLanding() {
                   loop
                   muted
                   playsInline
+                  webkit-playsinline="true"
+                  x5-playsinline="true"
+                  x5-video-player-type="h5"
+                  x5-video-player-fullscreen="true"
                   preload="metadata"
                   poster=""
                   className="absolute inset-0 w-full h-full object-cover"
@@ -222,8 +226,22 @@ export default function GlowByFCLanding() {
                     filter: 'brightness(1.02) contrast(1.01) saturate(1.05)'
                   }}
                   onLoadStart={() => console.log('Video loading started')}
-                  onCanPlay={() => console.log('Video ready to play')}
+                  onCanPlay={(e) => {
+                    console.log('Video ready to play')
+                    // Force play on mobile if needed
+                    const video = e.target as HTMLVideoElement
+                    if (video.paused) {
+                      video.play().catch(console.error)
+                    }
+                  }}
                   onError={(e) => console.error('Video error:', e)}
+                  onLoadedData={(e) => {
+                    // Additional mobile autoplay trigger
+                    const video = e.target as HTMLVideoElement
+                    if (video.paused) {
+                      video.play().catch(console.error)
+                    }
+                  }}
                 >
                   <source src="/assets/22.mp4" type="video/mp4" />
                   {/* Enhanced fallback with better UX */}

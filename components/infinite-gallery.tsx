@@ -12,8 +12,48 @@ export function InfiniteGallery() {
   const duplicatedImages = [...galleryImages, ...galleryImages]
   const [scrollSpeed, setScrollSpeed] = useState(1)
   const [isInteracting, setIsInteracting] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [loadedImages, setLoadedImages] = useState(new Set<number>())
   const containerRef = useRef<HTMLDivElement>(null)
+  const observerRef = useRef<IntersectionObserver | null>(null)
   const touchStartRef = useRef({ x: 0, time: 0 })
+
+  // Détection mobile améliorée
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Intersection Observer pour lazy loading mobile optimisé
+  useEffect(() => {
+    if (!isMobile) return
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = parseInt(entry.target.getAttribute('data-index') || '0')
+            setLoadedImages(prev => new Set([...prev, index]))
+          }
+        })
+      },
+      {
+        rootMargin: isMobile ? '100px' : '300px', // Plus petit buffer sur mobile
+        threshold: 0.1
+      }
+    )
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+      }
+    }
+  }, [isMobile])
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsInteracting(true)
@@ -31,21 +71,22 @@ export function InfiniteGallery() {
     const deltaTime = Date.now() - touchStartRef.current.time
     
     if (deltaTime > 0) {
-      // Calculate swipe velocity and adjust scroll speed
+      // Vitesse de défilement réduite sur mobile pour de meilleures performances
       const velocity = Math.abs(deltaX) / deltaTime
-      const newSpeed = Math.max(0.2, Math.min(5, 1 + velocity * 2))
+      const maxSpeed = isMobile ? 3 : 5 // Limite plus basse sur mobile
+      const newSpeed = Math.max(0.2, Math.min(maxSpeed, 1 + velocity * (isMobile ? 1.5 : 2)))
       setScrollSpeed(newSpeed)
     }
   }
 
   const handleTouchEnd = () => {
     setIsInteracting(false)
-    // Gradually return to normal speed
+    // Retour à la vitesse normale plus rapide sur mobile
     setTimeout(() => {
       if (!isInteracting) {
         setScrollSpeed(1)
       }
-    }, 1000)
+    }, isMobile ? 500 : 1000)
   }
 
   // Handle pointer events for better cross-device support
@@ -66,7 +107,8 @@ export function InfiniteGallery() {
     
     if (deltaTime > 0) {
       const velocity = Math.abs(deltaX) / deltaTime
-      const newSpeed = Math.max(0.2, Math.min(5, 1 + velocity * 2))
+      const maxSpeed = isMobile ? 3 : 5
+      const newSpeed = Math.max(0.2, Math.min(maxSpeed, 1 + velocity * (isMobile ? 1.5 : 2)))
       setScrollSpeed(newSpeed)
     }
   }
@@ -77,7 +119,7 @@ export function InfiniteGallery() {
       if (!isInteracting) {
         setScrollSpeed(1)
       }
-    }, 1000)
+    }, isMobile ? 500 : 1000)
   }
 
   return (
@@ -87,6 +129,10 @@ export function InfiniteGallery() {
         className="flex space-x-4 sm:space-x-5 md:space-x-5 lg:space-x-6 w-max"
         style={{
           animation: `scroll-infinite ${120 / scrollSpeed}s linear infinite`,
+          // Optimisation mobile : réduction de la complexité d'animation
+          willChange: 'transform',
+          backfaceVisibility: 'hidden',
+          perspective: '1000px'
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -96,27 +142,52 @@ export function InfiniteGallery() {
         onPointerUp={handlePointerUp}
       >
         {duplicatedImages.map((image, index) => {
-          // Déterminer la priorité basée sur l'index
-          const isPriority = index < PRELOAD_CONFIG.galleryPriority.length
-          const isCritical = index < 4 // Premières images critiques
+          // Stratégie de priorité mobile-first
+          const isPriority = index < (isMobile ? 6 : PRELOAD_CONFIG.galleryPriority.length) // Moins d'images prioritaires sur mobile
+          const isCritical = index < (isMobile ? 2 : 4) // Encore moins d'images critiques sur mobile
+          const shouldLoad = !isMobile || loadedImages.has(index) || isCritical
           
           return (
             <div
               key={index}
+              data-index={index}
+              ref={(el) => {
+                if (el && observerRef.current && isMobile && !loadedImages.has(index)) {
+                  observerRef.current.observe(el)
+                }
+              }}
               className="flex-shrink-0 group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
+              style={{
+                // Optimisations mobiles CSS
+                transform: 'translate3d(0,0,0)',
+                backfaceVisibility: 'hidden'
+              }}
             >
-              <Image
-                src={image || "/placeholder.svg"}
-                alt={`Glow by FC Collection ${(index % galleryImages.length) + 1}`}
-                width={1170}
-                height={1500}
-                className="w-[200px] h-[280px] sm:w-[220px] sm:h-[310px] md:w-[240px] md:h-[340px] lg:w-[250px] lg:h-[350px] object-cover group-hover:scale-105 transition-transform duration-500"
-                priority={isCritical}
-                loading={isPriority ? "eager" : "lazy"}
-                quality={isPriority ? 85 : 75}
-                placeholder="blur"
-                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyiwwNiAAY5kT3NcOFb7Udqdt/b//Z"
-              />
+              {shouldLoad ? (
+                <Image
+                  src={image || "/placeholder.svg"}
+                  alt={`Glow by FC Collection ${(index % galleryImages.length) + 1}`}
+                  width={isMobile ? 585 : 1170} // Résolution réduite sur mobile
+                  height={isMobile ? 750 : 1500}
+                  className="w-[200px] h-[280px] sm:w-[220px] sm:h-[310px] md:w-[240px] md:h-[340px] lg:w-[250px] lg:h-[350px] object-cover group-hover:scale-105 transition-transform duration-500"
+                  priority={isCritical}
+                  loading={isPriority ? "eager" : "lazy"}
+                  quality={isMobile ? (isPriority ? 75 : 60) : (isPriority ? 85 : 75)} // Qualité réduite sur mobile
+                  placeholder="blur"
+                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyiwwNiAAY5kT3NcOFb7Udqdt/b//Z"
+                  sizes={isMobile ? "(max-width: 768px) 200px, 250px" : "(max-width: 768px) 220px, (max-width: 1024px) 240px, 250px"}
+                />
+              ) : (
+                // Placeholder optimisé pour mobile
+                <div 
+                  className="w-[200px] h-[280px] sm:w-[220px] sm:h-[310px] md:w-[240px] md:h-[340px] lg:w-[250px] lg:h-[350px] bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl animate-pulse"
+                  style={{
+                    backgroundImage: 'url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyiwwNiAAY5kT3NcOFb7Udqdt/b//Z")',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
           )

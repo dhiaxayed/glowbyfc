@@ -1,19 +1,42 @@
 "use client"
 
-import { useEffect, useCallback } from "react"
+import { useEffect, useCallback, useState } from "react"
 import { PRELOAD_CONFIG } from "@/lib/preload-config"
 
 /**
  * Hook pour précharger les assets en arrière-plan sans bloquer l'interface
- * Optimisé pour chargement ULTRA-RAPIDE de toutes les images et vidéo
+ * Optimisé pour chargement ULTRA-RAPIDE mobile-first
  */
 export function useBackgroundAssetLoader() {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    // Détection mobile améliorée
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      setIsMobile(mobile)
+      return mobile
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
   
-  // Préchargement spécialisé pour les vidéos
+  // Préchargement spécialisé pour les vidéos (mobile optimisé)
   const preloadVideo = useCallback((src: string): Promise<boolean> => {
     return new Promise((resolve) => {
       const video = document.createElement('video')
-      video.preload = 'metadata' // Charge les métadonnées immédiatement
+      video.preload = isMobile ? 'metadata' : 'auto' // Metadata seulement sur mobile
+      video.muted = true
+      video.playsInline = true
+      
+      // Attributs spécifiques mobile pour autoplay
+      if (isMobile) {
+        video.setAttribute('webkit-playsinline', 'true')
+        video.setAttribute('x5-playsinline', 'true')
+        video.setAttribute('x5-video-player-type', 'h5')
+      }
       
       const cleanup = () => {
         video.onloadedmetadata = null
@@ -23,7 +46,7 @@ export function useBackgroundAssetLoader() {
       const timeoutId = setTimeout(() => {
         cleanup()
         resolve(false)
-      }, 2000) // Timeout court pour les vidéos
+      }, isMobile ? 3000 : 2000) // Timeout plus long sur mobile
 
       video.onloadedmetadata = () => {
         cleanup()
@@ -39,17 +62,24 @@ export function useBackgroundAssetLoader() {
 
       video.src = src
     })
-  }, [])
+  }, [isMobile])
   
-  // Préchargement intelligent avec priorités ULTRA-AGRESSIVES
+  // Préchargement intelligent avec priorités mobiles
   const preloadImage = useCallback((src: string, priority: 'high' | 'medium' | 'low' = 'medium'): Promise<boolean> => {
     return new Promise((resolve) => {
-      // Vérifier si l'image est déjà en cache
       const img = new window.Image()
       
-      // Timeouts optimisés pour vitesse maximale
-      const timeouts = { high: 1000, medium: 2000, low: 3000 } // Réduits pour plus de rapidité
+      // Timeouts ajustés pour mobile
+      const timeouts = isMobile 
+        ? { high: 2000, medium: 3000, low: 4000 } // Plus généreux sur mobile
+        : { high: 1000, medium: 2000, low: 3000 }
       const timeoutMs = timeouts[priority]
+      
+      // Optimisations mobiles
+      if (isMobile) {
+        img.loading = 'lazy'
+        img.decoding = 'async'
+      }
       
       const cleanup = () => {
         img.onload = null
@@ -58,7 +88,7 @@ export function useBackgroundAssetLoader() {
 
       const timeoutId = setTimeout(() => {
         cleanup()
-        resolve(false) // Échec silencieux
+        resolve(false)
       }, timeoutMs)
 
       img.onload = () => {
@@ -70,62 +100,77 @@ export function useBackgroundAssetLoader() {
       img.onerror = () => {
         cleanup()
         clearTimeout(timeoutId)
-        resolve(false) // Échec silencieux
+        resolve(false)
       }
 
       img.src = src
     })
-  }, [])
+  }, [isMobile])
 
-  // Préchargement par vagues avec délais optimaux
+  // Préchargement par vagues avec optimisations mobiles
   const startBackgroundPreloading = useCallback(async () => {
     try {
-      // Phase 1: Séparer les images des vidéos dans les assets critiques
+      // Phase 1: Assets critiques (réduits sur mobile)
       const criticalImages = PRELOAD_CONFIG.critical.filter(src => !src.endsWith('.mp4'))
       const criticalVideos = PRELOAD_CONFIG.critical.filter(src => src.endsWith('.mp4'))
       
-      // Précharger les images critiques ET la vidéo en parallèle avec les bonnes méthodes
       await Promise.allSettled([
-        ...criticalImages.map(src => preloadImage(src, 'high')),
+        ...criticalImages.slice(0, isMobile ? 2 : 4).map(src => preloadImage(src, 'high')), // Moins d'images sur mobile
         ...criticalVideos.map(src => preloadVideo(src))
       ])
 
-      console.log('🎯 Assets critiques chargés (images + vidéo)')
+      console.log(`🎯 Assets critiques chargés (mobile: ${isMobile})`)
 
-      // Phase 2: TOUTES les images de la galerie immédiatement après (pas de délai)
-      // Chargement agressif par lots plus importants pour vitesse maximale
+      // Phase 2: Galerie avec stratégie mobile
       const priorityAssets = PRELOAD_CONFIG.galleryPriority
-      const batchSize = 6 // Lots plus importants pour chargement ultra-rapide
+      const batchSize = isMobile ? 3 : 6 // Lots plus petits sur mobile
+      const delay = isMobile ? 25 : 10 // Délais plus longs sur mobile
       
-      for (let i = 0; i < priorityAssets.length; i += batchSize) {
-        const batch = priorityAssets.slice(i, i + batchSize)
+      const assetsToLoad = isMobile 
+        ? priorityAssets.slice(0, 12) // Limite sur mobile
+        : priorityAssets
+      
+      for (let i = 0; i < assetsToLoad.length; i += batchSize) {
+        const batch = assetsToLoad.slice(i, i + batchSize)
         
-        // Précharger le lot sans attendre (parallélisme maximal)
         Promise.allSettled(
-          batch.map(src => preloadImage(src, 'high')) // Toutes en priorité HAUTE
+          batch.map(src => preloadImage(src, 'high'))
         )
         
-        // Délai minimal entre les lots (10ms seulement)
-        await new Promise(resolve => setTimeout(resolve, 10))
+        await new Promise(resolve => setTimeout(resolve, delay))
       }
 
-      // Plus de Phase 3 - tout est chargé en priorité haute immédiatement
-      console.log('🚀 Préchargement ultra-rapide terminé: toutes les images et vidéo chargées!')
+      // Phase 3: Secondaires (seulement sur desktop ou connexion rapide)
+      if (!isMobile || (navigator as any).connection?.effectiveType === '4g') {
+        const secondaryAssets = PRELOAD_CONFIG.gallerySecondary.slice(0, isMobile ? 8 : 16)
+        
+        for (let i = 0; i < secondaryAssets.length; i += batchSize) {
+          const batch = secondaryAssets.slice(i, i + batchSize)
+          
+          Promise.allSettled(
+            batch.map(src => preloadImage(src, 'medium'))
+          )
+          
+          await new Promise(resolve => setTimeout(resolve, isMobile ? 50 : 25))
+        }
+      }
+
+      console.log(`🚀 Préchargement mobile-optimisé terminé (mobile: ${isMobile})`)
 
     } catch (error) {
-      // Échec silencieux - pas d'impact sur l'UX
       console.warn('Background preloading error:', error)
     }
-  }, [preloadImage, preloadVideo])
+  }, [preloadImage, preloadVideo, isMobile])
 
   useEffect(() => {
-    // Démarrer le préchargement IMMÉDIATEMENT après le rendu
-    const timer = setTimeout(() => {
-      startBackgroundPreloading()
-    }, 0) // Délai supprimé pour activation immédiate
+    if (isMobile !== undefined) { // Attendre la détection mobile
+      const timer = setTimeout(() => {
+        startBackgroundPreloading()
+      }, 0)
 
-    return () => clearTimeout(timer)
-  }, [startBackgroundPreloading])
+      return () => clearTimeout(timer)
+    }
+  }, [startBackgroundPreloading, isMobile])
 
   // Ce hook ne retourne rien - il travaille silencieusement en arrière-plan
 }
