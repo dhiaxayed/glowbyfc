@@ -52,8 +52,11 @@ const nextConfig = {
     // Optimiser les imports de packages pour réduire la taille du bundle
     optimizePackageImports: ['lucide-react', 'framer-motion'],
     
-    // Chunking CSS optimisé
-    cssChunking: true,
+    // Chunking CSS optimisé avec mode strict pour éviter les conflits
+    cssChunking: 'strict',
+    
+    // CSS inline pour de meilleures performances initiales (Context7 best practice)
+    inlineCss: true,
   },
 
   // Configuration de compilation optimisée

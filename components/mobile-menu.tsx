@@ -131,7 +131,7 @@ export function MobileMenu({ isOpen, onToggle }: MobileMenuProps) {
       variant="ghost"
       size="icon"
       onClick={onToggle}
-      className="lg:hidden text-gray-800 hover:text-white hover:bg-gradient-to-r hover:from-rose-400 hover:to-pink-500 transition-all duration-200 border border-gray-200 hover:border-transparent shadow-sm hover:shadow-lg rounded-xl p-2 relative z-50"
+      className="mobile-menu-button lg:hidden text-gray-800 hover:text-white hover:bg-gradient-to-r hover:from-rose-400 hover:to-pink-500 transition-all duration-200 border border-gray-200 hover:border-transparent shadow-sm hover:shadow-lg rounded-xl p-2"
       aria-label={isOpen ? "Fermer le menu" : "Ouvrir le menu"}
       aria-expanded={isOpen}
       data-mobile-menu-button
@@ -154,8 +154,8 @@ export function MobileMenu({ isOpen, onToggle }: MobileMenuProps) {
   // Mobile Menu Overlay - Context7 best practices for modal overlays
   const menuOverlay = mounted ? (
     <div
-      className={`fixed inset-0 lg:hidden transition-all duration-300 ease-out ${
-        isOpen ? 'z-[99999] opacity-100 pointer-events-auto' : 'z-[-1] opacity-0 pointer-events-none'
+      className={`mobile-menu-overlay fixed inset-0 lg:hidden transition-all duration-300 ease-out ${
+        isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}
       onClick={(e) => {
         // Close when clicking on backdrop
@@ -175,13 +175,12 @@ export function MobileMenu({ isOpen, onToggle }: MobileMenuProps) {
       
       {/* Menu Panel - Right slide-in with proper Context7 styling */}
       <div
-        className={`absolute top-0 right-0 h-full w-80 max-w-[90vw] bg-white shadow-2xl transition-transform duration-300 ease-out ${
+        className={`mobile-menu-panel absolute top-0 right-0 h-full w-80 max-w-[90vw] bg-white shadow-2xl transition-transform duration-300 ease-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         data-mobile-menu-panel
         style={{
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          zIndex: 100001
         }}
       >
         {/* Close button inside panel for better UX */}

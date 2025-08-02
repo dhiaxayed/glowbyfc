@@ -13,6 +13,25 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* FIX: Galerie infinie - Stabilisation des premières images sur mobile */
+@media (max-width: 768px) {
+  .flex-shrink-0:nth-child(-n+3) img {
+    /* Éliminer les transitions pour les 3 premières images */
+    transition: none !important;
+    /* Forcer l'opacité à 1 pour éviter le clignotement */
+    opacity: 1 !important;
+    /* Stabiliser le rendu */
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+  }
+  
+  .flex-shrink-0:nth-child(-n+3) {
+    /* Stabiliser les conteneurs des premières images */
+    transform: translate3d(0, 0, 0);
+    will-change: auto;
+  }
+}
+
 /* Mobile Menu Specific Optimizations - Context7 Best Practices */
 /* Note: .mobile-menu-active is extended in globals.css with additional properties */
 .mobile-menu-active {

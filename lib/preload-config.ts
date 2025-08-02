@@ -19,8 +19,18 @@ export const PRELOAD_CONFIG: PreloadConfig = {
   // Assets ULTRA-CRITIQUES - Logo, branding et vidéo (chargement immédiat)
   critical: [
     "/assets/logo.png",
+    "/assets/22.mp4", 
     "/assets/cptr.png",
-    "/assets/22.mp4", // Vidéo critique déplacée ici pour chargement immédiat
+    // Vidéo critique déplacée ici pour chargement immédiat
+    // FIX: SEULEMENT les 3 premières images de la galerie en critical pour éviter le clignotement mobile
+    "/glow2/1.jpeg",
+    "/glow2/2.jpeg", 
+    "/glow2/3.jpeg",
+    "/glow2/4.jpeg",
+    "/glow2/5.jpeg",
+    "/glow2/6.png",
+    "/glow2/7.png",
+    "/glow2/8.jpeg",
   ],
   
   // TOUTES les images de la galerie en priorité HAUTE (chargement immédiat après les assets critiques)

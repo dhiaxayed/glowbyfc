@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { PRELOAD_CONFIG } from "@/lib/preload-config"
+import { useGalleryOptimization, useOptimizedWillChange } from "@/hooks/use-performance-optimization"
 
 // Utilise directement la configuration centralisée pour éviter la duplication
 const galleryImages = [...PRELOAD_CONFIG.galleryPriority, ...PRELOAD_CONFIG.gallerySecondary]
@@ -16,6 +17,10 @@ export function InfiniteGallery() {
   const [loadedImages, setLoadedImages] = useState(new Set<number>())
   const containerRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
+  
+  // Context7 optimized hooks
+  const { containerRef: galleryContainerRef } = useGalleryOptimization()
+  const { elementRef: animationRef, startAnimation, endAnimation } = useOptimizedWillChange()
 
   // Détection mobile ultra-précise avec connection awareness
   useEffect(() => {
@@ -50,6 +55,26 @@ export function InfiniteGallery() {
     }
   }, [])
 
+  // Context7 optimized animation handlers
+  useEffect(() => {
+    if (containerRef.current) {
+      // Combine refs for optimization
+      if (galleryContainerRef.current !== containerRef.current) {
+        galleryContainerRef.current = containerRef.current
+      }
+      if (animationRef.current !== containerRef.current) {
+        animationRef.current = containerRef.current
+      }
+      
+      // Start animation optimization
+      startAnimation()
+      
+      return () => {
+        endAnimation()
+      }
+    }
+  }, [])
+
   // Intersection Observer mobile-optimisé avec adaptive performance
   useEffect(() => {
     if (!containerRef.current) return
@@ -59,6 +84,14 @@ export function InfiniteGallery() {
       observerRef.current.disconnect()
     }
 
+    // FIX: Pré-charger immédiatement les premières images pour éviter le clignotement
+    const initialImages = isMobile ? 6 : 8
+    const initialSet = new Set<number>()
+    for (let i = 0; i < Math.min(initialImages, duplicatedImages.length); i++) {
+      initialSet.add(i)
+    }
+    setVisibleImages(initialSet)
+
     // Adaptive thresholds based on device and connection
     const getOptimalSettings = () => {
       const isSlowConnection = connectionSpeed === 'slow-2g' || connectionSpeed === '2g'
@@ -66,7 +99,7 @@ export function InfiniteGallery() {
       
       return {
         rootMargin: isMobile 
-          ? (isSlowConnection ? '25px' : '100px') 
+          ? (isSlowConnection ? '50px' : '150px') // Augmenté pour un chargement plus précoce
           : (isSlowConnection ? '75px' : '200px'),
         threshold: isMobile ? [0, 0.1, 0.25] : [0, 0.1, 0.25, 0.5], // Multiple thresholds for smoother loading
         preloadCount: isMobile 
@@ -98,12 +131,17 @@ export function InfiniteGallery() {
                 })
               }
             } else if (!isMobile || entry.intersectionRatio < 0.1) {
-              // More aggressive cleanup on desktop, conservative on mobile
-              setVisibleImages(prev => {
-                const newSet = new Set(prev)
-                newSet.delete(index)
-                return newSet
-              })
+              // FIX: Ne jamais enlever les premières images critiques pour éviter le clignotement
+              const position = index % galleryImages.length
+              const isCriticalImage = position < (isMobile ? 3 : 4)
+              
+              if (!isCriticalImage) {
+                setVisibleImages(prev => {
+                  const newSet = new Set(prev)
+                  newSet.delete(index)
+                  return newSet
+                })
+              }
             }
           })
         }
@@ -126,7 +164,7 @@ export function InfiniteGallery() {
         observerRef.current.disconnect()
       }
     }
-  }, [isMobile, duplicatedImages.length, connectionSpeed])
+  }, [isMobile, duplicatedImages.length, connectionSpeed, galleryImages.length])
 
   // Image load success callback with performance tracking
   const handleImageLoad = useCallback((index: number) => {
@@ -137,13 +175,10 @@ export function InfiniteGallery() {
     <div className="relative overflow-hidden bg-gradient-to-r from-rose-50 via-white to-amber-50 py-4 sm:py-6 md:py-8">
       <div 
         ref={containerRef}
-        className="flex space-x-4 sm:space-x-5 md:space-x-5 lg:space-x-6 w-max"
+        className="flex space-x-4 sm:space-x-5 md:space-x-5 lg:space-x-6 w-max infinite-gallery-container animate-scroll-infinite"
         style={{
-          animation: `scroll-infinite 120s linear infinite`,
-          willChange: 'transform',
-          backfaceVisibility: 'hidden',
-          transform: 'translate3d(0,0,0)', // Force GPU acceleration
-          contain: 'layout style paint', // CSS containment for better performance
+          // FIX: Délai pour éviter le clignotement initial sur mobile
+          animationDelay: isMobile ? '0.5s' : '0s',
         }}
       >
         {duplicatedImages.map((image, index) => {
@@ -152,12 +187,12 @@ export function InfiniteGallery() {
           const isLoaded = loadedImages.has(index)
           const position = index % galleryImages.length
           
-          // Smart priority calculation
-          const isCritical = position < (isMobile ? 2 : 4)
+          // FIX: Smart priority calculation - critiques pour les 3 premières en mobile
+          const isCritical = position < (isMobile ? 3 : 4)
           const isPriority = position < (isMobile ? 6 : 12)
-          const isInInitialViewport = index < (isMobile ? 4 : 8)
+          const isInInitialViewport = index < (isMobile ? 6 : 8)
           
-          // Connection-aware loading decisions
+          // FIX: Connection-aware loading decisions - forcer le chargement des critiques
           const shouldEagerLoad = isCritical || (isInInitialViewport && !connectionSpeed.includes('2g'))
           const shouldRender = isCritical || isVisible || (isPriority && !connectionSpeed.includes('2g'))
           
@@ -192,17 +227,14 @@ export function InfiniteGallery() {
               key={`${image}-${index}`}
               data-index={index}
               ref={(el) => {
-                if (el && observerRef.current && !isVisible) {
+                // FIX: Attacher l'observer même pour les images critiques pour le suivi
+                if (el && observerRef.current) {
                   observerRef.current.observe(el)
                 }
               }}
-              className="flex-shrink-0 group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
-              style={{
-                transform: 'translate3d(0,0,0)',
-                backfaceVisibility: 'hidden',
-                contain: 'layout style paint',
-                willChange: isVisible ? 'transform' : 'auto' // Only declare will-change when needed
-              }}
+              className={`gallery-item flex-shrink-0 group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 ${
+                isCritical ? 'gallery-first-images' : ''
+              } ${isVisible ? 'will-animate' : ''}`}
             >
               {shouldRender ? (
                 <Image
@@ -210,7 +242,7 @@ export function InfiniteGallery() {
                   alt={`Glow by FC Collection ${position + 1}`}
                   width={width}
                   height={height}
-                  className="w-[200px] h-[280px] sm:w-[220px] sm:h-[310px] md:w-[240px] md:h-[340px] lg:w-[250px] lg:h-[350px] object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="gallery-image w-[200px] h-[280px] sm:w-[220px] sm:h-[310px] md:w-[240px] md:h-[340px] lg:w-[250px] lg:h-[350px] object-cover group-hover:scale-105 transition-transform duration-500"
                   priority={shouldEagerLoad}
                   loading={shouldEagerLoad ? "eager" : "lazy"}
                   quality={getImageQuality()}
@@ -224,17 +256,16 @@ export function InfiniteGallery() {
                   onError={() => handleImageLoad(index)} // Mark as "loaded" even on error
                   style={{
                     backgroundColor: '#f8fafc',
-                    objectFit: 'cover'
+                    objectFit: 'cover',
+                    // FIX: Stabiliser les premières images pour éviter le clignotement
+                    opacity: isCritical ? 1 : (isLoaded ? 1 : 0),
+                    transition: isCritical ? 'none' : 'opacity 0.3s ease-in-out'
                   }}
                 />
               ) : (
                 // Optimized placeholder with reduced complexity
                 <div 
-                  className="w-[200px] h-[280px] sm:w-[220px] sm:h-[310px] md:w-[240px] md:h-[340px] lg:w-[250px] lg:h-[350px] bg-gradient-to-br from-rose-50 to-pink-50 animate-pulse flex items-center justify-center"
-                  style={{
-                    backgroundColor: '#f8fafc',
-                    contain: 'layout style paint'
-                  }}
+                  className="loading-placeholder w-[200px] h-[280px] sm:w-[220px] sm:h-[310px] md:w-[240px] md:h-[340px] lg:w-[250px] lg:h-[350px] bg-gradient-to-br from-rose-50 to-pink-50 flex items-center justify-center"
                 >
                   <div className="w-6 h-6 border-2 border-rose-200 border-t-rose-400 rounded-full animate-spin opacity-30" />
                 </div>
