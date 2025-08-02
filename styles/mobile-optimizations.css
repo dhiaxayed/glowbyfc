@@ -14,22 +14,17 @@ html {
 }
 
 /* Mobile Menu Specific Optimizations - Context7 Best Practices */
+/* Note: .mobile-menu-active is extended in globals.css with additional properties */
 .mobile-menu-active {
-  /* Prevent background scrolling when mobile menu is open */
+  /* Base scroll prevention - extended in globals.css */
   overflow: hidden !important;
-}
-
-.mobile-menu-active body {
-  /* Additional scroll lock for body */
-  position: fixed;
-  width: 100%;
 }
 
 /* Mobile Menu Button Optimizations */
 [data-mobile-menu-button] {
-  /* Ensure proper z-index for menu button */
+  /* Ensure proper z-index for menu button - coordinated with globals.css */
   position: relative;
-  z-index: 100000;
+  z-index: 100001; /* Matches globals.css .mobile-menu-button */
   /* Optimize touch target */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -63,7 +58,7 @@ html {
 /* Optimize scroll behavior on mobile */
 @media (max-width: 768px) {
   * {
-    /* Reduce motion for better performance on lower-end devices */
+    /* Hardware acceleration for better performance - coordinated with globals.css */
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
     /* Optimize backface visibility */
