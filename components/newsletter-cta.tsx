@@ -109,7 +109,19 @@ export function NewsletterCTA() {
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <style dangerouslySetInnerHTML={{
+                    __html: `
+                      @keyframes spinRotation {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                      }
+                      .spin-loader {
+                        animation: spinRotation 1s linear infinite !important;
+                        display: inline-block !important;
+                      }
+                    `
+                  }} />
+                  <Loader2 className="mr-2 h-4 w-4 spin-loader" />
                   Inscription...
                 </>
               ) : (

@@ -7,25 +7,25 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // Configuration d'images optimisée pour la performance
+  // Configuration d'images optimisée pour mobile-first avec Context7 best practices
   images: {
-    // Garder l'optimisation des images pour de meilleures performances
+    // Optimisation des images activée pour de meilleures performances
     unoptimized: false,
     
-    // Formats d'images modernes pour une meilleure compression
+    // Formats optimisés avec AVIF en priorité pour une compression supérieure
     formats: ['image/avif', 'image/webp'],
     
-    // Tailles d'écran optimisées
+    // Tailles d'écran optimisées pour le responsive
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    
-    // Qualités optimisées selon le cas d'usage
-    qualities: [50, 75, 85, 95, 100],
     
     // Cache plus long pour de meilleures performances
     minimumCacheTTL: 86400, // 24 heures
     
-    // Domaines autorisés pour les images externes (si nécessaire)
+    // Qualités optimisées pour différents contextes
+    qualities: [40, 50, 65, 75, 85, 90, 95], // Gamme étendue pour s'adapter aux connexions + qualité max
+    
+    // Domaines autorisés pour les images externes
     domains: [],
     
     // Patterns locaux autorisés
@@ -39,20 +39,23 @@ const nextConfig = {
         search: '',
       },
     ],
+    
+    // Optimisations mobile
+    loader: 'default',
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    contentDispositionType: 'inline', // Pour un affichage plus rapide
   },
-  
-  // Optimisations expérimentales
+
+  // Optimisations expérimentales selon Context7 best practices
   experimental: {
-    // Optimiser les imports de packages
-    optimizePackageImports: ['lucide-react'],
+    // Optimiser les imports de packages pour réduire la taille du bundle
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
     
     // Chunking CSS optimisé
     cssChunking: true,
-    
-    // Ne pas précharger toutes les entrées au démarrage
-    preloadEntriesOnStart: false,
   },
-  
+
   // Configuration de compilation optimisée
   compiler: {
     // Supprimer les console.log en production
@@ -60,7 +63,11 @@ const nextConfig = {
       exclude: ['error', 'warn']
     } : false,
   },
-  
+
+  // Optimisations pour la production
+  poweredByHeader: false,
+  compress: true,
+
   // Headers de sécurité et performance
   async headers() {
     return [

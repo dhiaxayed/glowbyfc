@@ -21,15 +21,15 @@ export function SimpleFooter() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         
         {/* Main Footer Content */}
-        <div className="py-12 lg:py-16">
-          <div className="flex flex-col items-center space-y-8">
+        <div className="py-8 sm:py-10 lg:py-16">
+          <div className="flex flex-col items-center space-y-6 sm:space-y-8">
             
             {/* Social Media Section */}
             <div className="text-center">
               <h3 className="text-sm font-semibold text-gray-900 mb-4 tracking-wide uppercase">
                 Suivez-nous
               </h3>
-              <p className="text-sm text-gray-600 mb-6 max-w-xs">
+              <p className="text-sm text-gray-600 mb-4 sm:mb-6 max-w-xs">
                 Restez connecté pour découvrir nos dernières actualités, collections uniques et offres exclusives.
               </p>
               <div className="flex items-center justify-center gap-4">
@@ -71,7 +71,7 @@ export function SimpleFooter() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-200/60 py-6">
+        <div className="border-t border-gray-200/60 py-4 sm:py-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-center md:text-left">
             
             {/* Copyright */}

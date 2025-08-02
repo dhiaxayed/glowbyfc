@@ -19,7 +19,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { InfiniteGallery } from "@/components/infinite-gallery"
+import { InfiniteGalleryOptimized } from "@/components/infinite-gallery-optimized"
 import { AboutSection } from "@/components/about-section"
 import { DeliveryBanner } from "@/components/delivery-banner"
 import { NewsletterCTA } from "@/components/newsletter-cta"
@@ -284,7 +284,7 @@ export default function GlowByFCLanding() {
           </div>
         </div>
 
-        <InfiniteGallery />
+        <InfiniteGalleryOptimized />
       </section>
 
       {/* Instagram Section */}

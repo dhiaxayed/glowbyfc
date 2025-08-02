@@ -1,0 +1,246 @@
+/* Mobile Touch Scroll Optimizations - Context7 Best Practices */
+
+/* Global optimizations for smooth scrolling */
+html {
+  /* Enable smooth scrolling with momentum on iOS */
+  -webkit-overflow-scrolling: touch;
+  /* Optimize touch-action for better performance */
+  touch-action: manipulation;
+  /* Enable hardware acceleration */
+  transform: translate3d(0, 0, 0);
+  /* Optimize font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile Menu Specific Optimizations - Context7 Best Practices */
+.mobile-menu-active {
+  /* Prevent background scrolling when mobile menu is open */
+  overflow: hidden !important;
+}
+
+.mobile-menu-active body {
+  /* Additional scroll lock for body */
+  position: fixed;
+  width: 100%;
+}
+
+/* Mobile Menu Button Optimizations */
+[data-mobile-menu-button] {
+  /* Ensure proper z-index for menu button */
+  position: relative;
+  z-index: 100000;
+  /* Optimize touch target */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile Menu Panel Optimizations */
+[data-mobile-menu-panel] {
+  /* Hardware acceleration for smooth sliding */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  
+  /* Ensure proper isolation */
+  isolation: isolate;
+  
+  /* Optimize touch scrolling within panel */
+  -webkit-overflow-scrolling: touch;
+  
+  /* Prevent text selection during animations */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Navigation button animations */
+[data-mobile-menu-panel] button {
+  /* Smooth transforms for menu items */
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Optimize scroll behavior on mobile */
+@media (max-width: 768px) {
+  * {
+    /* Reduce motion for better performance on lower-end devices */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* Optimize backface visibility */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+  
+  /* Optimize touch targets */
+  button, 
+  a, 
+  [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Infinite gallery specific optimizations */
+.infinite-gallery-container {
+  /* GPU acceleration for the container */
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  
+  /* Containment for better performance */
+  contain: layout style paint;
+  
+  /* Optimize overflow for touch scrolling */
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+/* Image optimizations */
+.gallery-image {
+  /* GPU acceleration for images */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  
+  /* Optimize image rendering */
+  image-rendering: optimizeQuality;
+  
+  /* Prevent layout shift */
+  contain: layout style;
+}
+
+/* Touch interaction optimizations */
+.touch-interactive {
+  /* Optimize touch response */
+  touch-action: pan-x;
+  -webkit-user-select: none;
+  user-select: none;
+  
+  /* Prevent text selection during touch */
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: none;
+}
+
+/* Animation optimizations for mobile */
+@media (max-width: 768px) {
+  .infinite-gallery-container {
+    /* Reduce animation complexity on mobile */
+    animation-timing-function: ease-out;
+  }
+  
+  /* Optimize hover effects for touch devices */
+  .gallery-image:hover {
+    transform: none;
+  }
+  
+  /* Use transform instead of opacity for better performance */
+  .fade-animation {
+    opacity: 1;
+    transform: scale(1);
+    transition: transform 0.3s ease-out;
+  }
+  
+  .fade-animation.loading {
+    transform: scale(0.95);
+  }
+}
+
+/* Prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .infinite-gallery-container {
+    animation: none !important;
+  }
+}
+
+/* High refresh rate displays */
+@media (min-resolution: 120dpi) {
+  .infinite-gallery-container {
+    /* Optimize for high refresh rate displays */
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .gallery-image {
+    /* Optimize image contrast in dark mode */
+    filter: brightness(0.9);
+  }
+}
+
+/* Connection-aware optimizations */
+@media (prefers-reduced-data: reduce) {
+  .gallery-image {
+    /* Reduce image quality for data saving */
+    image-rendering: optimizeSpeed;
+  }
+  
+  .infinite-gallery-container {
+    /* Reduce animation smoothness to save resources */
+    animation-timing-function: steps(30);
+  }
+}
+
+/* Landscape mobile optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+  .infinite-gallery-container {
+    /* Adjust for landscape mode */
+    padding: 1rem 0;
+  }
+  
+  .gallery-image {
+    /* Slightly smaller images in landscape */
+    width: calc(100% - 10px);
+  }
+}
+
+/* Focus optimizations for accessibility */
+.gallery-image:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Loading state optimizations */
+.gallery-placeholder {
+  /* Efficient placeholder animation */
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Error state optimizations */
+.gallery-error {
+  background-color: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+}
+
+/* Footer mobile optimizations - reduce bottom space */
+@media (max-width: 640px) {
+  footer {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  
+  footer .container {
+    padding-bottom: 0 !important;
+  }
+}
