@@ -201,13 +201,28 @@
 
   /* ===== ANIMATION UTILITIES ===== */
   .animate-scroll-infinite {
-    animation: scroll-infinite 80s linear infinite;
+    animation: scroll-infinite 90s linear infinite;
+    animation-fill-mode: none;
+    animation-play-state: running;
+    will-change: transform;
+  }
+  
+  /* ===== FORCE CONSISTENT SPEED ACROSS ALL CONDITIONS ===== */
+  .infinite-gallery-container {
+    animation-duration: 90s !important;
+    animation-timing-function: linear !important;
+    animation-iteration-count: infinite !important;
+    animation-direction: normal !important;
+    animation-delay: 0s !important;
   }
   
   .fade-in {
     animation: fadeIn 0.6s ease-out forwards;
   }
   
+  .slide-up {
+    animation: slideUp 0.8s ease-out forwards;
+  }
   .slide-up {
     animation: slideUp 0.8s ease-out forwards;
   }
@@ -253,7 +268,7 @@
   /* ===== HIGH REFRESH RATE OPTIMIZATION ===== */
   @media (min-resolution: 120dpi) {
     .animate-scroll-infinite {
-      animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      animation-timing-function: linear;
     }
   }
   
@@ -264,7 +279,8 @@
     }
     
     .animate-scroll-infinite {
-      animation-timing-function: steps(30);
+      animation-timing-function: linear;
+      animation-duration: 90s;
     }
   }
   
@@ -274,14 +290,48 @@
       filter: brightness(0.9);
     }
   }
-  
-  /* ===== LANDSCAPE MOBILE ===== */
-  @media (max-width: 768px) and (orientation: landscape) {
-    .infinite-gallery-container {
-      padding: 1rem 0;
-    }
+
+/* ===== LANDSCAPE MOBILE ===== */
+@media (max-width: 768px) and (orientation: landscape) {
+  .infinite-gallery-container {
+    padding: 1rem 0;
   }
-  
+}
+
+/* ===== ERROR STATES ===== */
+.gallery-error {
+  background-color: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+}
+
+/* ===== FINAL OVERRIDE FOR CONSISTENT SCROLL SPEED ===== */
+.animate-scroll-infinite,
+.infinite-gallery-container.animate-scroll-infinite {
+  animation-name: scroll-infinite !important;
+  animation-duration: 90s !important;
+  animation-timing-function: linear !important;
+  animation-iteration-count: infinite !important;
+  animation-direction: normal !important;
+  animation-delay: 0s !important;
+  animation-fill-mode: none !important;
+  animation-play-state: running !important;
+}
+
+/* ===== COMFORTABLE INTERACTION ===== */
+.infinite-gallery-container:hover {
+  animation-play-state: paused !important;
+}
+
+/* Mobile-friendly: no hover pause on touch devices */
+@media (hover: none) {
+  .infinite-gallery-container:hover {
+    animation-play-state: running !important;
+  }
+}
   /* ===== FOCUS ACCESSIBILITY ===== */
   .gallery-image:focus {
     outline: 2px solid #3b82f6;

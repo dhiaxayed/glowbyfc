@@ -85,7 +85,8 @@ export function InfiniteGallery() {
     }
 
     // FIX: Pré-charger immédiatement les premières images pour éviter le clignotement
-    const initialImages = isMobile ? 6 : 8
+    // Match exactly with what CriticalPreloader preloads
+    const initialImages = isMobile ? 4 : 6 // Same as CriticalPreloader logic
     const initialSet = new Set<number>()
     for (let i = 0; i < Math.min(initialImages, duplicatedImages.length); i++) {
       initialSet.add(i)
@@ -177,8 +178,10 @@ export function InfiniteGallery() {
         ref={containerRef}
         className="flex space-x-4 sm:space-x-5 md:space-x-5 lg:space-x-6 w-max infinite-gallery-container animate-scroll-infinite"
         style={{
-          // FIX: Délai pour éviter le clignotement initial sur mobile
-          animationDelay: isMobile ? '0.5s' : '0s',
+          // Consistent animation with no delays for smooth speed
+          animationDelay: '0s',
+          animationFillMode: 'none',
+          animationPlayState: 'running'
         }}
       >
         {duplicatedImages.map((image, index) => {

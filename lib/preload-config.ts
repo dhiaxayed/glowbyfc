@@ -21,16 +21,11 @@ export const PRELOAD_CONFIG: PreloadConfig = {
     "/assets/logo.png",
     "/assets/22.mp4", 
     "/assets/cptr.png",
-    // Vidéo critique déplacée ici pour chargement immédiat
-    // FIX: SEULEMENT les 3 premières images de la galerie en critical pour éviter le clignotement mobile
+    // ONLY the first 3-4 images that are immediately visible in viewport
+    // This prevents preload warnings for unused assets
     "/glow2/1.jpeg",
     "/glow2/2.jpeg", 
     "/glow2/3.jpeg",
-    "/glow2/4.jpeg",
-    "/glow2/5.jpeg",
-    "/glow2/6.png",
-    "/glow2/7.png",
-    "/glow2/8.jpeg",
   ],
   
   // TOUTES les images de la galerie en priorité HAUTE (chargement immédiat après les assets critiques)
