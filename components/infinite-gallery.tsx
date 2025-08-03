@@ -15,6 +15,7 @@ export function InfiniteGallery() {
   const [connectionSpeed, setConnectionSpeed] = useState<string>('4g')
   const [visibleImages, setVisibleImages] = useState(new Set<number>())
   const [loadedImages, setLoadedImages] = useState(new Set<number>())
+  const [isPaused, setIsPaused] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   
@@ -74,6 +75,38 @@ export function InfiniteGallery() {
       }
     }
   }, [])
+
+  // Handlers pour pause/reprise du défilement sur mobile et desktop
+  const handleMouseEnter = useCallback(() => {
+    if (!isMobile) {
+      setIsPaused(true)
+    }
+  }, [isMobile])
+
+  const handleMouseLeave = useCallback(() => {
+    if (!isMobile) {
+      setIsPaused(false)
+    }
+  }, [isMobile])
+
+  const handleTouchStart = useCallback(() => {
+    if (isMobile) {
+      setIsPaused(true)
+    }
+  }, [isMobile])
+
+  const handleTouchEnd = useCallback(() => {
+    if (isMobile) {
+      // Délai avant de reprendre pour permettre le clic
+      setTimeout(() => setIsPaused(false), 2000)
+    }
+  }, [isMobile])
+
+  const handleClick = useCallback(() => {
+    if (isMobile) {
+      setIsPaused(prev => !prev)
+    }
+  }, [isMobile])
 
   // Intersection Observer mobile-optimisé avec adaptive performance
   useEffect(() => {
@@ -177,11 +210,13 @@ export function InfiniteGallery() {
       <div 
         ref={containerRef}
         className="flex space-x-4 sm:space-x-5 md:space-x-5 lg:space-x-6 w-max infinite-gallery-container animate-scroll-infinite"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         style={{
           // Consistent animation with no delays for smooth speed
           animationDelay: '0s',
           animationFillMode: 'none',
-          animationPlayState: 'running'
+          animationPlayState: isPaused ? 'paused' : 'running'
         }}
       >
         {duplicatedImages.map((image, index) => {
@@ -237,7 +272,10 @@ export function InfiniteGallery() {
               }}
               className={`gallery-item flex-shrink-0 group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 ${
                 isCritical ? 'gallery-first-images' : ''
-              } ${isVisible ? 'will-animate' : ''}`}
+              } ${isVisible ? 'will-animate' : ''} ${isMobile ? 'cursor-pointer' : ''}`}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onClick={handleClick}
             >
               {shouldRender ? (
                 <Image

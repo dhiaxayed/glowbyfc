@@ -21,11 +21,26 @@ export const PRELOAD_CONFIG: PreloadConfig = {
     "/assets/logo.png",
     "/assets/22.mp4", 
     "/assets/cptr.png",
-    // ONLY the first 3-4 images that are immediately visible in viewport
-    // This prevents preload warnings for unused assets
     "/glow2/1.jpeg",
     "/glow2/2.jpeg", 
     "/glow2/3.jpeg",
+    "/glow2/4.jpeg",
+    "/glow2/5.jpeg",
+    "/glow2/6.png",
+    "/glow2/7.png",
+    "/glow2/8.jpeg",
+    "/glow2/10.jpeg",
+    "/glow2/13.jpeg",
+    "/glow2/14.png",
+    "/glow2/15.png",
+    "/glow2/16.png",
+    "/glow2/17.png",
+    "/glow2/18.png",
+    "/glow2/19.png",
+    "/glow2/20.jpeg",
+    "/glow2/21.jpeg",
+    "/glow2/22.jpeg",
+    "/glow2/23.jpeg",
   ],
   
   // TOUTES les images de la galerie en priorité HAUTE (chargement immédiat après les assets critiques)
